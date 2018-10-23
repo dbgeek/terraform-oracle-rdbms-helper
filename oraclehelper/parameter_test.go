@@ -43,3 +43,20 @@ func TestResetParameter(t *testing.T) {
 	}
 
 }
+
+func TestParameterScopeSpfile(t *testing.T) {
+
+	tf := ResourceParameter{
+		Name:  "undo_retention",
+		Value: "400",
+		Scope: "Spfile",
+	}
+	before, _ := c.ParameterService.Read(tf)
+	c.ParameterService.SetParameter(tf)
+	after, _ := c.ParameterService.Read(tf)
+
+	if before.Value != after.Value {
+		t.Errorf("Wanted: %v, but gott: %v\n", before.Value, after.Value)
+	}
+
+}
