@@ -1,6 +1,7 @@
 package oraclehelper
 
 import (
+	"github.com/hashicorp/go-version"
 	"testing"
 )
 
@@ -30,16 +31,19 @@ func TestSetParameter(t *testing.T) {
 }
 
 func TestResetParameter(t *testing.T) {
-	tf := ResourceParameter{
-		Name:  "undo_retention",
-		Value: "400",
-	}
-	c.ParameterService.SetParameter(tf)
-	c.ParameterService.ResetParameter(tf)
-	param, _ := c.ParameterService.Read(tf)
+	requiredVersion, _ := version.NewVersion("12.2")
+	if c.DBVersion.GreaterThan(requiredVersion) {
+		tf := ResourceParameter{
+			Name:  "undo_retention",
+			Value: "400",
+		}
+		c.ParameterService.SetParameter(tf)
+		c.ParameterService.ResetParameter(tf)
+		param, _ := c.ParameterService.Read(tf)
 
-	if param.Value == "400" {
-		t.Errorf("%v; want %v\n", param.Value, "800")
+		if param.Value == "400" {
+			t.Errorf("%v; want %v\n", param.Value, "800")
+		}
 	}
 
 }

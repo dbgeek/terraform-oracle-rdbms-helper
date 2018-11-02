@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.1 (November 2, 2018)
+
+* Making profile & grant support different version of Oracle.
+
 ## 0.2.0 (October 23, 2018)
 
 Changes done on flight to SFO for Hashiconf
