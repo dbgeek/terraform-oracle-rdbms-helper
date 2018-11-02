@@ -99,16 +99,6 @@ func (p *profileService) ReadProfile(tf ResourceProfile) (map[string]string, err
 			profileparm.Implicit = val
 		}
 		profileparms[profileparm.ResourceName] = profileparm.Limit
-		/*
-			profileparm.Profile = m["PROFILE"].(string)
-			profileparm.ResourceName = m["RESOURCE_NAME"].(string)
-			profileparm.ResourceType = m["RESOURCE_TYPE"].(string)
-			profileparm.Limit = m["LIMIT"].(string)
-			profileparm.Common = m["COMMON"].(string)
-			profileparm.Inherited = m["INHERITED"].(string)
-			profileparm.Implicit = m["IMPLICIT"].(string)
-			profileparms[profileparm.ResourceName] = profileparm.Limit
-		*/
 	}
 
 	return profileparms, nil
