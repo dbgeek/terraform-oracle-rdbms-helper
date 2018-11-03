@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.2 (November 3, 2018)
+
+* ReadProfile return error if not exists in db
+
 ## 0.2.1 (November 2, 2018)
 
 * Making profile & grant support different version of Oracle.
