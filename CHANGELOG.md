@@ -3,6 +3,7 @@
 ## 0.2.2 (November 3, 2018)
 
 * ReadProfile return error if not exists in db
+* Bug fixed ReadGrantObjectPrivilege. Did not bind the result to correct variable. Copy Past bug
 
 ## 0.2.1 (November 2, 2018)
 
