@@ -124,31 +124,31 @@ func (tp *grantService) ReadGrantObjectPrivilege(tf ResourceGrantObjectPrivilege
 			grantTable.Grantee = val
 		}
 		if val, ok := m["OWNER"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Owner = val
 		}
 		if val, ok := m["TABLE_NAME"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.TableName = val
 		}
 		if val, ok := m["GRANTOR"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Grantor = val
 		}
 		if val, ok := m["PRIVILEGE"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Privilege = val
 		}
 		if val, ok := m["GRANTABLE"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Grantable = val
 		}
 		if val, ok := m["HIERARCHY"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Hierarchy = val
 		}
 		if val, ok := m["COMMON"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Common = val
 		}
 		if val, ok := m["TYPE"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Type = val
 		}
 		if val, ok := m["INHERITED"].(string); ok {
-			grantTable.Grantee = val
+			grantTable.Inherited = val
 		}
 		log.Printf("[DEBUG] getting privs: grantTable.Privilege")
 		privileges = append(privileges, grantTable.Privilege)
