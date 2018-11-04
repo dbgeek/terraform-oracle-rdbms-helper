@@ -25,8 +25,8 @@ func TestGrantServiceObjectGrants(t *testing.T) {
 		log.Fatalf("failed to read role, errormsg: %v\n", err)
 	}
 
-	if len(grants.Privileges) != 1 {
-		t.Errorf("Wanted: %d gott: %d", 1, len(grants.Privileges))
+	if grants.Privileges[0] != "SELECT" {
+		t.Errorf("Wanted: %s gott: %s", "SELECT", grants.Privileges[0])
 	}
 	c.GrantService.RevokeObjectPrivilege(objGrant)
 	grants, err = c.GrantService.ReadGrantObjectPrivilege(objGrant)
