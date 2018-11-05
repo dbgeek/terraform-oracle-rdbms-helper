@@ -38,3 +38,15 @@ func TestProfileServiceCreateUpdateDropProfile(t *testing.T) {
 
 	c.ProfileService.DeleteProfile(profile)
 }
+
+func TestProfileServiceReadProfileProfileNotExist(t *testing.T) {
+	profile := ResourceProfile{
+		Profile: "PROFILE_NOT_EXIST",
+	}
+	want := "Can not find profile: PROFILE_NOT_EXIST in the dba_profiles"
+	_, err := c.ProfileService.ReadProfile(profile)
+
+	if err.Error() != want {
+		t.Errorf("want %s\n got: %s\n", want, err)
+	}
+}
