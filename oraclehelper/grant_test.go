@@ -1,6 +1,7 @@
 package oraclehelper
 
 import (
+	"fmt"
 	"log"
 	"testing"
 )
@@ -113,4 +114,153 @@ func TestGrantServiceRolePrivs(t *testing.T) {
 
 	c.RoleService.DropRole(dbRole)
 	c.UserService.DropUser(resourceUsername)
+}
+
+func TestGrantServiceWholeSchemaToUser(t *testing.T) {
+	username := "TSTSCHEMA"
+	want := "1168412532"
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username))
+	resourceUsername := ResourceUser{Username: username}
+	objGrant := ResourceGrantObjectPrivilege{
+		Owner: username,
+	}
+	usrErr := c.UserService.CreateUser(resourceUsername)
+	if usrErr != nil {
+		t.Errorf("error: %v\n", usrErr)
+	}
+
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl1(col1 varchar2(30))", username))
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl2(col1 varchar2(30))", username))
+	got, err := c.GrantService.GetHashSchemaAllTables(objGrant)
+	if err != nil {
+		t.Errorf("error: %v\n", err)
+	}
+
+	if want != got {
+		t.Errorf("want: %s got:%s \n", want, got)
+	}
+
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username))
+
+}
+func TestGrantServiceGetHashSchemaPrivsToUser(t *testing.T) {
+	username1 := "TSTSCHEMA1"
+	username2 := "TSTSCHEMA2"
+	want := "3232637379"
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
+	resourceUsername := ResourceUser{Username: username1}
+	objGrant := ResourceGrantObjectPrivilege{
+		Owner:      username1,
+		Grantee:    username2,
+		ObjectName: "TBL1",
+		Privilege:  []string{"SELECT"},
+	}
+	usrErr := c.UserService.CreateUser(resourceUsername)
+	if usrErr != nil {
+		t.Errorf("error: %v\n", usrErr)
+	}
+	resourceUsername = ResourceUser{Username: username2}
+	usrErr = c.UserService.CreateUser(resourceUsername)
+	if usrErr != nil {
+		t.Errorf("error: %v\n", usrErr)
+	}
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl1(col1 varchar2(30))", username1))
+	c.GrantService.GrantObjectPrivilege(objGrant)
+	got, err := c.GrantService.GetHashSchemaPrivsToUser(objGrant)
+	if err != nil {
+		t.Errorf("error: %v\n", err)
+	}
+
+	if want != got {
+		t.Errorf("want: %s got:%s \n", want, got)
+	}
+
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
+
+}
+
+func TestGrantServiceCheckGrantSchemaDiffLogic(t *testing.T) {
+	username1 := "TSTSCHEMA1"
+	username2 := "TSTSCHEMA2"
+
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
+
+	resourceUsername := ResourceUser{Username: username1}
+	usrErr := c.UserService.CreateUser(resourceUsername)
+	if usrErr != nil {
+		t.Errorf("error: %v\n", usrErr)
+	}
+	resourceUsername = ResourceUser{Username: username2}
+	usrErr = c.UserService.CreateUser(resourceUsername)
+
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl1(col1 varchar2(30))", username1))
+	objGrant := ResourceGrantObjectPrivilege{
+		Owner:      username1,
+		Grantee:    username2,
+		ObjectName: "TBL1",
+		Privilege:  []string{"SELECT"},
+	}
+	c.GrantService.GrantObjectPrivilege(objGrant)
+	grantHash, _ := c.GrantService.GetHashSchemaPrivsToUser(objGrant)
+	allTableHash, _ := c.GrantService.GetHashSchemaAllTables(objGrant)
+
+	if grantHash != allTableHash {
+		t.Errorf("allTableHash: %s grantHash:%s \n", allTableHash, grantHash)
+	}
+
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl2(col1 varchar2(30))", username1))
+	grantHash, _ = c.GrantService.GetHashSchemaPrivsToUser(objGrant)
+	allTableHash, _ = c.GrantService.GetHashSchemaAllTables(objGrant)
+	if grantHash == allTableHash {
+		t.Errorf("allTableHash: %s grantHash:%s \n", allTableHash, grantHash)
+	}
+
+	c.GrantService.GrantTableSchemaToUser(objGrant)
+	grantHash, _ = c.GrantService.GetHashSchemaPrivsToUser(objGrant)
+	allTableHash, _ = c.GrantService.GetHashSchemaAllTables(objGrant)
+	if grantHash != allTableHash {
+		t.Errorf("allTableHash: %s grantHash:%s \n", allTableHash, grantHash)
+	}
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
+}
+
+func TestGrantServiceCRevokeSchemaFromUser(t *testing.T) {
+	username1 := "TSTSCHEMA1"
+	username2 := "TSTSCHEMA2"
+
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
+
+	resourceUsername := ResourceUser{Username: username1}
+	usrErr := c.UserService.CreateUser(resourceUsername)
+	if usrErr != nil {
+		t.Errorf("error: %v\n", usrErr)
+	}
+	resourceUsername = ResourceUser{Username: username2}
+	usrErr = c.UserService.CreateUser(resourceUsername)
+
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl1(col1 varchar2(30))", username1))
+	c.DBClient.Exec(fmt.Sprintf("CREATE TABLE %s.tbl2(col1 varchar2(30))", username1))
+	objGrant := ResourceGrantObjectPrivilege{
+		Owner:     username1,
+		Grantee:   username2,
+		Privilege: []string{"SELECT", "UPDATE"},
+	}
+	c.GrantService.GrantTableSchemaToUser(objGrant)
+	var result int
+	c.DBClient.QueryRow("select count(*) as antal from dba_tab_privs where grantee = 'TSTSCHEMA2' and owner = 'TSTSCHEMA1'").Scan(&result)
+
+	c.GrantService.RevokeTableSchemaFromUser(objGrant)
+
+	c.DBClient.QueryRow("select count(*) as antal from dba_tab_privs where grantee = 'TSTSCHEMA2' and owner = 'TSTSCHEMA1'").Scan(&result)
+
+	if result != 0 {
+		t.Error("Result should be 0 after revoking all privileges")
+	}
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
+	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
 }
