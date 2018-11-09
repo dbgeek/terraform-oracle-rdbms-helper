@@ -3,6 +3,7 @@
 ## 0.2.3 (November 9, 2018)
 
 * Switching to sha256 for generate hash
+* Updating go-oci8 vendoring
 
 ## 0.2.2 (November 5, 2018)
 
