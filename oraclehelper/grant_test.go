@@ -118,7 +118,7 @@ func TestGrantServiceRolePrivs(t *testing.T) {
 
 func TestGrantServiceWholeSchemaToUser(t *testing.T) {
 	username := "TSTSCHEMA"
-	want := "1168412532"
+	want := "d49cb717d004498a4ea71d1742ff5755a0e295360515e96835ba43547a0059c9"
 	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username))
 	resourceUsername := ResourceUser{Username: username}
 	objGrant := ResourceGrantObjectPrivilege{
@@ -146,7 +146,7 @@ func TestGrantServiceWholeSchemaToUser(t *testing.T) {
 func TestGrantServiceGetHashSchemaPrivsToUser(t *testing.T) {
 	username1 := "TSTSCHEMA1"
 	username2 := "TSTSCHEMA2"
-	want := "3232637379"
+	want := "cec6418210ba8b444c741c06a91390888287d5dae6bdb9eeff4ac8e081d13690"
 	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username1))
 	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username2))
 	resourceUsername := ResourceUser{Username: username1}

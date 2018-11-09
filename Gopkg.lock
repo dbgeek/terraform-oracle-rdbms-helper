@@ -19,11 +19,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:006c7ac73e437d5f76e31b9d5bcded64c30b004f2b81f6f15b0ec112d55cb497"
+  digest = "1:04c940cffdb7c03a504bafca3ab62b2bb1db4b2882341df91e0255b36204f888"
   name = "github.com/mattn/go-oci8"
   packages = ["."]
   pruneopts = "UT"
-  revision = "0955bc9f194fc150e795489cf1840010b81ad0bd"
+  revision = "fd85bbc460de06866f9f08b469e24a14af92a2c1"
 
 [solve-meta]
   analyzer-name = "dep"
