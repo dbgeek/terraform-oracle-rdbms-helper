@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.4 (November 11, 2018)
+
+* Revoking priviliges that are assignes to a user
+
 ## 0.2.3 (November 9, 2018)
 
 * Switching to sha256 for generate hash
