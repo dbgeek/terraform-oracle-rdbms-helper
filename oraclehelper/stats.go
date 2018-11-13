@@ -4,24 +4,6 @@ import (
 	"log"
 )
 
-/*
-	DBMS_STATS.SET_SCHEMA_PREFS(pname	=> '',
-								ownname	=> '',
-								pvalue 	=> '')
-	DBMS_STATS.SET_TABLE_PREFS(pname=>'',
-                            	ownname =>'',
-								tabname => '',
-								pvalue 	=> '')
-DBMS_STATS.SET_GLOBAL_PREFS (
-    pname     IN   VARCHAR2,
-    pvalue    IN   VARCHAR2);
-
-	DBMS_STATS.GET_PREFS (
-		pname     IN   VARCHAR2,
-		ownname   IN   VARCHAR2 DEFAULT NULL,
-		tabname   IN   VARCHAR2 DEFAULT NULL)
-	RETURN VARCHAR2;
-*/
 const (
 	queryTablePref = `
 SELECT 
@@ -38,7 +20,7 @@ SELECT
 	DBMS_STATS.GET_PREFS (:1) AS pvalue 
 FROM dual
 `
-	SetGlobalPref = `
+	setGlobalPref = `
 BEGIN
 	DBMS_STATS.SET_GLOBAL_PREFS (
 		pname     => :1,
@@ -46,7 +28,7 @@ BEGIN
 	);
 END;
 `
-	SetSchemaPref = `
+	setSchemaPref = `
 BEGIN
 	DBMS_STATS.SET_SCHEMA_PREFS(
 		pname	=> :1,
@@ -55,7 +37,7 @@ BEGIN
 	);
 END;
 `
-	SetTablePref = `
+	setTablePref = `
 BEGIN
 	DBMS_STATS.SET_TABLE_PREFS(pname=>'',
 		ownname => :1,
@@ -100,7 +82,7 @@ func (r *statsService) ReadGlobalPre(tf ResourceStats) (*Stats, error) {
 func (r *statsService) SetGlobalPre(tf ResourceStats) error {
 	log.Printf("[DEBUG] SetGlobalPre pname: %s, pvalu: %s\n", tf.Pname, tf.Pvalu)
 
-	_, err := r.client.DBClient.Exec(SetGlobalPref, tf.Pname, tf.Pvalu)
+	_, err := r.client.DBClient.Exec(setGlobalPref, tf.Pname, tf.Pvalu)
 	if err != nil {
 		return err
 	}
@@ -120,7 +102,7 @@ func (r *statsService) ReadSchemaPref(tf ResourceStats) (*Stats, error) {
 func (r *statsService) SetSchemaPre(tf ResourceStats) error {
 	log.Printf("[DEBUG] SetSchemaPre pname: %sowner: %s pvalue: %s\n", tf.Pname, tf.OwnName, tf.Pvalu)
 
-	_, err := r.client.DBClient.Exec(SetSchemaPref, tf.Pname, tf.OwnName, tf.Pvalu)
+	_, err := r.client.DBClient.Exec(setSchemaPref, tf.Pname, tf.OwnName, tf.Pvalu)
 	if err != nil {
 		return err
 	}
@@ -140,7 +122,7 @@ func (r *statsService) ReadTabPref(tf ResourceStats) (*Stats, error) {
 func (r *statsService) SetTabPre(tf ResourceStats) error {
 	log.Printf("[DEBUG] SetTabPre pname: %s owner: %s table: %s\n", tf.Pname, tf.OwnName, tf.TaBName)
 
-	_, err := r.client.DBClient.Exec(SetTablePref, tf.Pname, tf.OwnName, tf.TaBName, tf.Pvalu)
+	_, err := r.client.DBClient.Exec(setTablePref, tf.Pname, tf.OwnName, tf.TaBName, tf.Pvalu)
 	if err != nil {
 		return err
 	}
