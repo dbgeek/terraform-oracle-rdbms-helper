@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.5
+
+* Adding Read / Set dbms_stats pref
+
 ## 0.2.4 (November 11, 2018)
 
 * Revoking priviliges that are assignes to a user
