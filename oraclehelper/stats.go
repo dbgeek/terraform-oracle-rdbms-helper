@@ -93,7 +93,7 @@ func (r *statsService) ReadSchemaPref(tf ResourceStats) (*Stats, error) {
 	log.Printf("[DEBUG] ReadSchemaPref pname: %s owner: %s\n", tf.Pname, tf.OwnName)
 	statsType := &Stats{}
 
-	err := r.client.DBClient.QueryRow(queryTablePref, tf.Pname, tf.OwnName).Scan(&statsType.Pvalu)
+	err := r.client.DBClient.QueryRow(querySchemaPref, tf.Pname, tf.OwnName).Scan(&statsType.Pvalu)
 	if err != nil {
 		return nil, err
 	}

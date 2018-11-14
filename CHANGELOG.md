@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.6
+
+* ReadSchemaPref was using queryTablePref instead of querySchemaPref query
+
 ## 0.2.5
 
 * Adding Read / Set dbms_stats pref
