@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.7
+
+* Removing ReadSchemaPref as Oracle have no support for that and bug fix SetTabPre.
+
 ## 0.2.6
 
 * ReadSchemaPref was using queryTablePref instead of querySchemaPref query
