@@ -2,6 +2,7 @@ package oraclehelper
 
 import (
 	"fmt"
+	"github.com/mattrobenolt/size"
 	"log"
 )
 
@@ -11,7 +12,8 @@ SELECT
 	u.username,
 	u.default_tablespace,
 	u.temporary_tablespace,
-	u.profile
+	u.profile,
+	u.account_status
 FROM
 	dba_users u
 WHERE u.username = UPPER(:1)
@@ -43,6 +45,7 @@ type (
 		DefaultTablespace   string
 		TemporaryTablespace string
 		Profile             string
+		AccountStatus       string
 		Quota               map[string]string
 	}
 	userService struct {
@@ -106,6 +109,9 @@ func (u *userService) CreateUser(tf ResourceUser) error {
 	if tf.AccountStatus != "" {
 		sqlCommand += fmt.Sprintf(" account %s", tf.AccountStatus)
 	}
+	if tf.Profile != "" {
+		sqlCommand += fmt.Sprintf(" profile %s", tf.Profile)
+	}
 	if tf.Quota != nil {
 		for k, v := range tf.Quota {
 			sqlCommand += fmt.Sprintf(" quota %s on %s", v, k)
@@ -134,6 +140,9 @@ func (u *userService) ModifyUser(tf ResourceUser) error {
 	}
 	if tf.AccountStatus != "" {
 		sqlCommand += fmt.Sprintf(" account %s", tf.AccountStatus)
+	}
+	if tf.Profile != "" {
+		sqlCommand += fmt.Sprintf(" profile %s", tf.Profile)
 	}
 	if tf.Quota != nil {
 		for k, v := range tf.Quota {
