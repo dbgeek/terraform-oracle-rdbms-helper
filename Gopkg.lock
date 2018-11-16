@@ -10,6 +10,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:4d40568cadeedb40d01cc7359f21b0a7b8c2eff9676fec48ba4f40fa0f5da928"
+  name = "github.com/hashicorp/terraform"
+  packages = ["helper/acctest"]
+  pruneopts = "UT"
+  revision = "17850e9a55d33c43d7c31fd6ac122ba97a51d899"
+  version = "v0.11.10"
+
+[[projects]]
   digest = "1:edbef42561faa44c19129b68d1e109fbc1647f63239250391eadc8d0e7c9f669"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
