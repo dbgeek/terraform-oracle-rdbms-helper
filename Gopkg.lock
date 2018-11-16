@@ -38,6 +38,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/hashicorp/go-version",
+    "github.com/hashicorp/terraform/helper/acctest",
     "github.com/kelseyhightower/envconfig",
     "github.com/mattn/go-oci8",
   ]
