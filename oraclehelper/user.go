@@ -33,6 +33,7 @@ type (
 		DefaultTablespace   string
 		TemporaryTablespace string
 		Profile             string
+		AccountStatus       string
 		Quota               map[string]string
 	}
 	//User ..
@@ -58,6 +59,7 @@ func (u *userService) ReadUser(tf ResourceUser) (*User, error) {
 		&param.DefaultTablespace,
 		&param.TemporaryTablespace,
 		&param.Profile,
+		&param.AccountStatus,
 	)
 	if err != nil {
 		return nil, err
@@ -101,6 +103,9 @@ func (u *userService) CreateUser(tf ResourceUser) error {
 	if tf.TemporaryTablespace != "" {
 		sqlCommand += fmt.Sprintf(" temporary tablespace %s", tf.TemporaryTablespace)
 	}
+	if tf.AccountStatus != "" {
+		sqlCommand += fmt.Sprintf(" account %s", tf.AccountStatus)
+	}
 	if tf.Quota != nil {
 		for k, v := range tf.Quota {
 			sqlCommand += fmt.Sprintf(" quota %s on %s", v, k)
@@ -126,6 +131,9 @@ func (u *userService) ModifyUser(tf ResourceUser) error {
 	}
 	if tf.TemporaryTablespace != "" {
 		sqlCommand += fmt.Sprintf(" temporary tablespace %s", tf.TemporaryTablespace)
+	}
+	if tf.AccountStatus != "" {
+		sqlCommand += fmt.Sprintf(" account %s", tf.AccountStatus)
 	}
 	if tf.Quota != nil {
 		for k, v := range tf.Quota {
