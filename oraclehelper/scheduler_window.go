@@ -13,7 +13,7 @@ SELECT
     sw.resource_plan,
     sw.schedule_type,
     sw.repeat_interval,
-    sw.duration,
+    TO_CHAR(sw.duration) AS duration,
     sw.enabled,
     sw.comments
 FROM dba_scheduler_windows sw
@@ -25,6 +25,30 @@ BEGIN
     DBMS_SCHEDULER.DROP_WINDOW (
 		window_name => :1
 	);
+END;
+`
+
+	setAttribute = `
+BEGIN
+	DBMS_SCHEDULER.SET_ATTRIBUTE(
+	name		=>	:1,
+	attribute	=>	:2,
+	value		=>	:3
+);
+END;
+`
+	disable = `
+BEGIN
+	DBMS_SCHEDULER.DISABLE(
+		name	=>	:1
+);
+END;
+`
+	enable = `
+BEGIN
+	DBMS_SCHEDULER.ENABLE(
+	name	=>	:1
+);
 END;
 `
 )
@@ -86,7 +110,7 @@ func (s *schedulerWindowService) CreateSchedulerWindow(tf ResourceSchedulerWindo
 		sqlCommand += fmt.Sprintf("start_date => %s,", tf.StartDate)
 	}
 	if tf.Duration != "" {
-		sqlCommand += fmt.Sprintf("duration => %s,", tf.Duration)
+		sqlCommand += fmt.Sprintf("duration => '%s',", tf.Duration)
 	}
 	if tf.RepeatInterval != "" {
 		sqlCommand += fmt.Sprintf("repeat_interval => '%s',", tf.RepeatInterval)
@@ -114,6 +138,58 @@ func (s *schedulerWindowService) DropSchedulerWindow(tf ResourceSchedulerWindow)
 	if err != nil {
 		log.Printf("[ERROR] drop schedule Window failed with error: %v\n", err)
 		return err
+	}
+	return nil
+}
+
+func (s *schedulerWindowService) ModifySchedulerWindow(tf ResourceSchedulerWindow) error {
+	name := fmt.Sprintf("%s.%s", tf.Owner, tf.WindowName)
+	log.Printf("[DEBUG] ModifySchedulerWindow name: %s\n", name)
+	_, err := s.client.DBClient.Exec(disable, name)
+
+	if err != nil {
+		log.Printf("[ERROR] ModifySchedulerWindow disable failed with error: %v\n", err)
+	}
+
+	if tf.ResourcePlan != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "resource_plan", tf.ResourcePlan)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	if tf.StartDate != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "start_date", tf.StartDate)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	if tf.Duration != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "duration", tf.Duration)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	if tf.RepeatInterval != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "repeat_interval", tf.RepeatInterval)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	if tf.WindowPriority != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "window_priority", tf.WindowPriority)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	if tf.Comments != "" {
+		_, err := s.client.DBClient.Exec(setAttribute, name, "comments", tf.Comments)
+		if err != nil {
+			log.Printf("[ERROR] ModifySchedulerWindow setAttribute failed with error: %v\n", err)
+		}
+	}
+	_, err = s.client.DBClient.Exec(enable, name)
+	if err != nil {
+		log.Printf("[ERROR] ModifySchedulerWindow enabled failed with error: %v\n", err)
 	}
 	return nil
 }
