@@ -8,6 +8,7 @@
 * Adding quota support for user API
 * Adding account status support for user API
 * Adding profile support for user API
+* Adding SchedulerWindowService to oracle helper
 
 ## 0.2.7
 
