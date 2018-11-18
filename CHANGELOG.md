@@ -1,5 +1,15 @@
 # Changelog oraclehelper
 
+## 0.2.8
+
+* Adding vendoring hashicorp/terraform
+* Adding vendoring mattrobenolt/size
+* Adding vendoring golang.org/x/crypto
+* Adding quota support for user API
+* Adding account status support for user API
+* Adding profile support for user API
+* Adding SchedulerWindowService to oracle helper
+
 ## 0.2.7
 
 * Removing ReadSchemaPref as Oracle have no support for that and bug fix SetTabPre.
