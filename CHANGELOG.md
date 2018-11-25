@@ -1,5 +1,10 @@
 # Changelog oraclehelper
 
+## 0.2.8.1 (November 25, 2018)
+
+* Generate random string password when creating a user
+* Change how to handle account status
+
 ## 0.2.8
 
 * Adding vendoring hashicorp/terraform

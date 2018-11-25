@@ -1,6 +1,7 @@
 package oraclehelper
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -33,7 +34,19 @@ func TestUserService(t *testing.T) {
 	if user.Profile != "PP01" {
 		t.Errorf("want: %s, gott: %s", "PP01", user.Profile)
 	}
-
+	if user.AccountStatus != "OPEN" {
+		t.Errorf("want: %s, gott: %s", "OPEN", user.AccountStatus)
+	}
+	c.DBClient.Exec(fmt.Sprintf("alter user %s password expire", "TEST01"))
+	user, _ = c.UserService.ReadUser(ResourceUser{Username: "TEST01"})
+	if user.AccountStatus != "EXPIRED" {
+		t.Errorf("want: %s, gott: %s", "EXPIRED", user.AccountStatus)
+	}
+	c.UserService.ModifyUser(ResourceUser{Username: "TEST01", AccountStatus: "LOCK"})
+	user, _ = c.UserService.ReadUser(ResourceUser{Username: "TEST01"})
+	if user.AccountStatus != "EXPIRED & LOCKED" {
+		t.Errorf("want: %s, gott: %s", "EXPIRED & LOCKED", user.AccountStatus)
+	}
 	c.UserService.DropUser(ResourceUser{Username: "TEST01"})
 	c.ProfileService.DeleteProfile(ResourceProfile{Profile: "PP01"})
 }
