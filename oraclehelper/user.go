@@ -107,7 +107,11 @@ func (u *userService) CreateUser(tf ResourceUser) error {
 		sqlCommand += fmt.Sprintf(" temporary tablespace %s", tf.TemporaryTablespace)
 	}
 	if tf.AccountStatus != "" {
+		if tf.AccountStatus == "EXPIRED" {
+			sqlCommand += " password expire"
+		} else {
 		sqlCommand += fmt.Sprintf(" account %s", tf.AccountStatus)
+	}
 	}
 	if tf.Profile != "" {
 		sqlCommand += fmt.Sprintf(" profile %s", tf.Profile)
