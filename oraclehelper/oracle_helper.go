@@ -30,6 +30,7 @@ type (
 		GrantService           *grantService
 		StatsService           *statsService
 		SchedulerWindowService *schedulerWindowService
+		AutoTaskService        *autoTaskService
 	}
 )
 
@@ -84,6 +85,7 @@ func NewClient(cfg Cfg) *Client {
 	c.GrantService = &grantService{client: c}
 	c.StatsService = &statsService{client: c}
 	c.SchedulerWindowService = &schedulerWindowService{client: c}
+	c.AutoTaskService = &autoTaskService{client: c}
 	c.DBVersion, _ = version.NewVersion(dBVersion)
 	log.Printf("[DEBUG] dbversion: %v", c.DBVersion)
 
