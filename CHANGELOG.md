@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.2.9 (December 1, 2018)
+
+* Adding API for Managing Automated Database Maintenance Tasks
+
 ## 0.2.8.1 (November 25, 2018)
 
 * Generate random string password when creating a user
