@@ -3,6 +3,7 @@
 ## 0.2.9 (December 1, 2018)
 
 * Adding API for Managing Automated Database Maintenance Tasks
+* Adding database API for force logging and flashback on off
 
 ## 0.2.8.1 (November 25, 2018)
 
