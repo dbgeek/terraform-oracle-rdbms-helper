@@ -1,0 +1,12 @@
+github.com/hashicorp/go-version v1.0.0 h1:21MVWPKDphxa7ineQQTrCU5brh7OuVVAzGOCnnCPtE8=
+github.com/hashicorp/go-version v1.0.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
+github.com/hashicorp/terraform v0.11.10 h1:XYZ/V+teSckRfZdwxsoP+66v0slHixe5Ai8wxqY/lfo=
+github.com/hashicorp/terraform v0.11.10/go.mod h1:uN1KUiT7Wdg61fPwsGXQwK3c8PmpIVZrt5Vcb1VrSoM=
+github.com/kelseyhightower/envconfig v1.3.0 h1:IvRS4f2VcIQy6j4ORGIf9145T/AsUB+oY8LyvN8BXNM=
+github.com/kelseyhightower/envconfig v1.3.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
+github.com/mattn/go-oci8 v0.0.0-20181219054606-247e199a1d6b h1:M/pyob0oEMZlffatfOsRo4iJHMd/bInpyrGuoxSKnhw=
+github.com/mattn/go-oci8 v0.0.0-20181219054606-247e199a1d6b/go.mod h1:/M9VLO+lUPmxvoOK2PfWRZ8mTtB4q1Hy9lEGijv9Nr8=
+github.com/mattrobenolt/size v0.0.0-20150321023249-9fdad82c8f2c h1:CC0v/A2QdFwrIG8/44Ntd31mrd6GPbSc2fzkgAWuynk=
+github.com/mattrobenolt/size v0.0.0-20150321023249-9fdad82c8f2c/go.mod h1:Ri9TNooooijq+mA73oiWEvDWp+fH1xWvz/PkuYaK7a0=
+golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869 h1:kkXA53yGe04D0adEYJwEVQjeBppL01Exg+fnMjfUraU=
+golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
