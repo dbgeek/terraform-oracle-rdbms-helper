@@ -2,7 +2,8 @@
 
 ## 0.3.0 
 
-* Update vendoring for go-oci8
+* Update vendoring for go-oci8.
+* Switch to use go mod instead of go vendor with go dep utility.
 
 ## 0.2.9 (December 1, 2018)
 
