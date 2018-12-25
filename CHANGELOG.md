@@ -1,5 +1,11 @@
 # Changelog oraclehelper
 
+## 0.3.0 (December 25, 2018)
+
+* Update vendoring for go-oci8.
+* Switch to use go mod instead of go vendor with go dep utility.
+* Adding blockChangeTrackingService API and test for service.
+
 ## 0.2.9 (December 1, 2018)
 
 * Adding API for Managing Automated Database Maintenance Tasks
