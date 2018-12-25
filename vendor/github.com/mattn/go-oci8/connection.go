@@ -25,11 +25,11 @@ func (conn *OCI8Conn) Exec(query string, args []driver.Value) (driver.Result, er
 }
 
 func (conn *OCI8Conn) exec(ctx context.Context, query string, args []namedValue) (driver.Result, error) {
-	s, err := conn.prepare(ctx, query)
-	defer s.Close()
+	s, err := conn.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
+	defer s.Close()
 	res, err := s.(*OCI8Stmt).exec(ctx, args)
 	if err != nil && err != driver.ErrSkip {
 		return nil, err
@@ -37,40 +37,8 @@ func (conn *OCI8Conn) exec(ctx context.Context, query string, args []namedValue)
 	return res, nil
 }
 
-/*
-FIXME:
-Queryer is disabled because of incresing cursor numbers.
-See https://github.com/mattn/go-oci8/issues/151
-OCIStmtExecute doesn't return anything to close resource.
-This mean that OCI8Rows.Close can't close statement handle. For example,
-prepared statement is called twice like below.
-
-    stmt, _ := db.Prepare("...")
-    stmt.QueryRow().Scan(&x)
-    stmt.QueryRow().Scan(&x)
-
-If OCI8Rows close handle of statement, this fails.
-
-// Query implements Queryer.
-func (conn *OCI8Conn) Query(query string, args []driver.Value) (driver.Rows, error) {
-	list := make([]namedValue, len(args))
-	for i, v := range args {
-		list[i] = namedValue{
-			Ordinal: i + 1,
-			Value:   v,
-		}
-	}
-	rows, err := conn.query(context.Background(), query, list)
-	if err != nil {
-		return nil, err
-	}
-	rows.(*OCI8Rows).cls = true
-	return rows, err
-}
-*/
-
 func (conn *OCI8Conn) query(ctx context.Context, query string, args []namedValue) (driver.Rows, error) {
-	s, err := conn.prepare(ctx, query)
+	s, err := conn.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +50,10 @@ func (conn *OCI8Conn) query(ctx context.Context, query string, args []namedValue
 	return rows, nil
 }
 
-func (conn *OCI8Conn) ping(ctx context.Context) error {
-	rv := C.OCIPing(
-		conn.svc,
-		conn.errHandle,
-		C.OCI_DEFAULT)
-	if rv == C.OCI_SUCCESS {
+// Ping database connection
+func (conn *OCI8Conn) Ping(ctx context.Context) error {
+	result := C.OCIPing(conn.svc, conn.errHandle, C.OCI_DEFAULT)
+	if result == C.OCI_SUCCESS {
 		return nil
 	}
 	errorCode, err := conn.ociGetError()
@@ -97,16 +63,18 @@ func (conn *OCI8Conn) ping(ctx context.Context) error {
 		// See https://github.com/rana/ora/issues/224
 		return nil
 	}
+
 	conn.logger.Print("Ping error: ", err)
 	return driver.ErrBadConn
 }
 
-// Begin a transaction
+// Begin starts a transaction
 func (conn *OCI8Conn) Begin() (driver.Tx, error) {
-	return conn.begin(context.Background())
+	return conn.BeginTx(context.Background(), driver.TxOptions{})
 }
 
-func (conn *OCI8Conn) begin(ctx context.Context) (driver.Tx, error) {
+// BeginTx starts a transaction
+func (conn *OCI8Conn) BeginTx(ctx context.Context, txOptions driver.TxOptions) (driver.Tx, error) {
 	if conn.transactionMode != C.OCI_TRANS_READWRITE {
 		// transaction handle
 		trans, _, err := conn.ociHandleAlloc(C.OCI_HTYPE_TRANS, 0)
@@ -188,18 +156,19 @@ func (conn *OCI8Conn) Close() error {
 	return err
 }
 
-// Prepare a query
+// Prepare prepares a query
 func (conn *OCI8Conn) Prepare(query string) (driver.Stmt, error) {
-	return conn.prepare(context.Background(), query)
+	return conn.PrepareContext(context.Background(), query)
 }
 
-func (conn *OCI8Conn) prepare(ctx context.Context, query string) (driver.Stmt, error) {
+// PrepareContext prepares a query
+func (conn *OCI8Conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
 	if conn.enableQMPlaceholders {
 		query = placeholders(query)
 	}
 
-	pquery := C.CString(query)
-	defer C.free(unsafe.Pointer(pquery))
+	queryP := cString(query)
+	defer C.free(unsafe.Pointer(queryP))
 
 	// statement handle
 	stmt, _, err := conn.ociHandleAlloc(C.OCI_HTYPE_STMT, 0)
@@ -210,8 +179,8 @@ func (conn *OCI8Conn) prepare(ctx context.Context, query string) (driver.Stmt, e
 	if rv := C.OCIStmtPrepare(
 		(*C.OCIStmt)(*stmt),
 		conn.errHandle,
-		(*C.OraText)(unsafe.Pointer(pquery)),
-		C.ub4(C.strlen(pquery)),
+		queryP,
+		C.ub4(len(query)),
 		C.ub4(C.OCI_NTV_SYNTAX),
 		C.ub4(C.OCI_DEFAULT),
 	); rv != C.OCI_SUCCESS {
@@ -391,26 +360,34 @@ func (conn *OCI8Conn) ociLobRead(lobLocator *C.OCILobLocator, form C.ub1) ([]byt
 	readBuffer := make([]byte, lobBufferSize)
 	buffer := make([]byte, 0)
 	result := (C.sword)(C.OCI_NEED_DATA)
+	piece := (C.ub1)(C.OCI_FIRST_PIECE)
 
 	for result == C.OCI_NEED_DATA {
-		readSize := (C.ub4)(lobBufferSize)
+		readBytes := (C.oraub8)(0)
 
-		result = C.OCILobRead(
-			conn.svc,       // The service context handle
-			conn.errHandle, // An error handle
-			lobLocator,     // A LOB or BFILE locator that uniquely references the LOB or BFILE
-			&readSize,      // The amount in either bytes (BLOBs and BFILEs) or characters (CLOBs and NCLOBs)
-			1,              // The absolute offset from the beginning of the LOB value. The first position is 1. The subsequent polling calls the offset parameter is ignored.
-			unsafe.Pointer(&readBuffer[0]), // The pointer to a buffer into which the piece will be read.
-			lobBufferSize,                  // The length of the buffer in bytes/characters.
-			nil,                            // The context pointer for the callback function. Can be null.
+		// If both byte_amtp and char_amtp are set to point to zero and OCI_FIRST_PIECE is passed then polling mode is assumed and data is read till the end of the LOB
+		result = C.OCILobRead2(
+			conn.svc,       // service context handle
+			conn.errHandle, // error handle
+			lobLocator,     // LOB or BFILE locator
+			&readBytes,     // number of bytes to read. Used for BLOB and BFILE always. For CLOB and NCLOB, it is used only when char_amtp is zero.
+			nil,            // number of characters to read
+			1,              // the offset in the first call and in subsequent polling calls the offset parameter is ignored
+			unsafe.Pointer(&readBuffer[0]), // pointer to a buffer into which the piece will be read
+			lobBufferSize,                  // length of the buffer
+			piece,                          // For polling, pass OCI_FIRST_PIECE the first time and OCI_NEXT_PIECE in subsequent calls.
+			nil,                            // context pointer for the callback function
 			nil,                            // If this is null, then OCI_NEED_DATA will be returned for each piece.
-			0,                              // If this value is 0 then csid is set to the client's NLS_LANG or NLS_CHAR value.
-			form,                           // The character set form of the buffer data: SQLCS_IMPLICIT or SQLCS_NCHAR
+			0,                              // character set ID of the buffer data. If this value is 0 then csid is set to the client's NLS_LANG or NLS_CHAR value, depending on the value of csfrm.
+			form,                           // character set form of the buffer data
 		)
 
+		if piece == C.OCI_FIRST_PIECE {
+			piece = C.OCI_NEXT_PIECE
+		}
+
 		if result == C.OCI_SUCCESS || result == C.OCI_NEED_DATA {
-			buffer = append(buffer, readBuffer[:int(readSize)]...)
+			buffer = append(buffer, readBuffer[:int(readBytes)]...)
 		}
 	}
 

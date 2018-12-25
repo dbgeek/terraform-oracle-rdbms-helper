@@ -97,11 +97,11 @@ type (
 
 	// OCI8Result is Oracle result
 	OCI8Result struct {
-		n     int64
-		errn  error
-		id    int64
-		errid error
-		stmt  *OCI8Stmt
+		rowsAffected    int64
+		rowsAffectedErr error
+		rowid           string
+		rowidErr        error
+		stmt            *OCI8Stmt
 	}
 
 	oci8Define struct {
@@ -138,8 +138,11 @@ type (
 var (
 	// ErrOCISuccessWithInfo is OCI_SUCCESS_WITH_INFO
 	ErrOCISuccessWithInfo = errors.New("OCI_SUCCESS_WITH_INFO")
+	// ErrNoRowid is result has no rowid
+	ErrNoRowid = errors.New("result has no rowid")
 
-	phre = regexp.MustCompile(`\?`)
+	phre           = regexp.MustCompile(`\?`)
+	defaultCharset = C.ub2(0)
 
 	// OCI8Driver is the sql driver
 	OCI8Driver = &OCI8DriverStruct{
@@ -149,6 +152,19 @@ var (
 
 func init() {
 	sql.Register("oci8", OCI8Driver)
+
+	// set defaultCharset to AL32UTF8
+	var envP *C.OCIEnv
+	envPP := &envP
+	var result C.sword
+	result = C.OCIEnvCreate(envPP, C.OCI_DEFAULT, nil, nil, nil, nil, 0, nil)
+	if result != C.OCI_SUCCESS {
+		panic("OCIEnvCreate error")
+	}
+	nlsLang := cString("AL32UTF8")
+	defaultCharset = C.OCINlsCharSetNameToId(unsafe.Pointer(*envPP), (*C.oratext)(nlsLang))
+	C.free(unsafe.Pointer(nlsLang))
+	C.OCIHandleFree(unsafe.Pointer(*envPP), C.OCI_HTYPE_ENV)
 }
 
 /*

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,17 +17,22 @@ import (
 )
 
 // ParseDSN parses a DSN used to connect to Oracle
+//
 // It expects to receive a string in the form:
+//
 // [username/[password]@]host[:port][/instance_name][?param1=value1&...&paramN=valueN]
 //
-// Currently the parameters supported is:
-// 1 'loc' which
-// sets the timezone to read times in as and to marshal to when writing times to
-// Oracle date,
-// 2 'isolation' =READONLY,SERIALIZABLE,DEFAULT
-// 3 'prefetch_rows'
-// 4 'prefetch_memory'
-// 5 'questionph' =YES,NO,TRUE,FALSE enable question-mark placeholders, default to false
+// Supported parameters are:
+//
+// loc - the time location for timezone when reading/writing Go time/Oracle date
+//
+// isolation - the isolation level that can be set to: READONLY, SERIALIZABLE, or DEFAULT
+//
+// prefetch_rows - the number of top level rows to be prefetched. Defaults to 0. A 0 means unlimited rows.
+//
+// prefetch_memory - the max memory for top level rows to be prefetched. Defaults to 4096. A 0 means unlimited memory.
+//
+// questionph - when true, enables question mark placeholders. Defaults to false. (uses strconv.ParseBool to check for true)
 func ParseDSN(dsnString string) (dsn *DSN, err error) {
 
 	dsn = &DSN{Location: time.Local}
@@ -58,8 +64,8 @@ func ParseDSN(dsnString string) (dsn *DSN, err error) {
 	dsn.Connect = host
 
 	// set safe defaults
-	dsn.prefetchRows = 10
-	dsn.prefetchMemory = 0
+	dsn.prefetchRows = 0
+	dsn.prefetchMemory = 4096
 	dsn.operationMode = C.OCI_DEFAULT
 
 	qp, err := ParseQuery(params)
@@ -83,12 +89,8 @@ func ParseDSN(dsnString string) (dsn *DSN, err error) {
 				return nil, fmt.Errorf("Invalid isolation: %v", v[0])
 			}
 		case "questionph":
-			switch v[0] {
-			case "YES", "TRUE":
-				dsn.enableQMPlaceholders = true
-			case "NO", "FALSE":
-				dsn.enableQMPlaceholders = false
-			default:
+			dsn.enableQMPlaceholders, err = strconv.ParseBool(v[0])
+			if err != nil {
 				return nil, fmt.Errorf("Invalid questionpm: %v", v[0])
 			}
 		case "prefetch_rows":
@@ -166,35 +168,16 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 		conn.logger = log.New(ioutil.Discard, "", 0)
 	}
 
-	// get NLS_LANG character set ID from environment variable
-	var charset C.ub2
-	result := C.OCINlsEnvironmentVariableGet(
-		unsafe.Pointer(&charset), // Returns a value of a globalization support environment variable such as the NLS_LANG character set ID or the NLS_NCHAR character set ID.
-		0,                    // Specifies the size of the given output value, which is applicable only to string data.
-		C.OCI_NLS_CHARSET_ID, // Specifies one of the following values to get from the globalization support environment variable: OCI_NLS_CHARSET_ID: NLS_LANG character set ID in ub2 datatype. OCI_NLS_NCHARSET_ID: NLS_NCHAR character set ID in ub2 datatype.
-		0,                    // Specifies the character set ID for retrieved string data.
-		nil,                  // The length of the return value in bytes.
-	)
-	if result != C.OCI_SUCCESS {
-		return nil, errors.New("OCINlsEnvironmentVariableGet NLS_LANG error")
-	}
-
-	// get NLS_NCHAR character set ID from environment variable
-	var ncharset C.ub2
-	result = C.OCINlsEnvironmentVariableGet(
-		unsafe.Pointer(&ncharset), // Returns a value of a globalization support environment variable such as the NLS_LANG character set ID or the NLS_NCHAR character set ID.
-		0, // Specifies the size of the given output value, which is applicable only to string data.
-		C.OCI_NLS_NCHARSET_ID, // Specifies one of the following values to get from the globalization support environment variable: OCI_NLS_CHARSET_ID: NLS_LANG character set ID in ub2 datatype. OCI_NLS_NCHARSET_ID: NLS_NCHAR character set ID in ub2 datatype.
-		0,   // Specifies the character set ID for retrieved string data.
-		nil, // The length of the return value in bytes.
-	)
-	if result != C.OCI_SUCCESS {
-		return nil, errors.New("OCINlsEnvironmentVariableGet NLS_NCHAR error")
-	}
-
 	// environment handle
 	var envP *C.OCIEnv
 	envPP := &envP
+	var result C.sword
+	charset := C.ub2(0)
+
+	if os.Getenv("NLS_LANG") == "" && os.Getenv("NLS_NCHAR") == "" {
+		charset = defaultCharset
+	}
+
 	result = C.OCIEnvNlsCreate(
 		envPP,          // pointer to a handle to the environment
 		C.OCI_THREADED, // environment mode: https://docs.oracle.com/cd/B28359_01/appdev.111/b28395/oci16rel001.htm#LNOCI87683
@@ -204,8 +187,8 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 		nil,            // Specifies the user-defined memory free function. If mode is OCI_THREADED, this memory free routine must be thread-safe.
 		0,              // Specifies the amount of user memory to be allocated for the duration of the environment.
 		nil,            // Returns a pointer to the user memory of size xtramemsz allocated by the call for the user.
-		charset,        // The client-side character set for the current environment handle. If it is 0, the NLS_LANG setting is used. OCI_UTF16ID is a valid setting; it is used by the metadata and the CHAR data.
-		ncharset,       // The client-side national character set for the current environment handle. If it is 0, NLS_NCHAR setting is used. OCI_UTF16ID is a valid setting; it is used by the NCHAR data.
+		charset,        // The client-side character set for the current environment handle. If it is 0, the NLS_LANG setting is used.
+		charset,        // The client-side national character set for the current environment handle. If it is 0, NLS_NCHAR setting is used.
 	)
 	if result != C.OCI_SUCCESS {
 		return nil, errors.New("OCIEnvNlsCreate error")
@@ -250,46 +233,52 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 		return nil, errors.New("allocate error handle error")
 	}
 	conn.errHandle = (*C.OCIError)(*handle)
+	handle = nil
 
-	phost := C.CString(dsn.Connect)
-	defer C.free(unsafe.Pointer(phost))
-	puser := C.CString(dsn.Username)
-	defer C.free(unsafe.Pointer(puser))
-	ppass := C.CString(dsn.Password)
-	defer C.free(unsafe.Pointer(ppass))
+	host := cString(dsn.Connect)
+	defer C.free(unsafe.Pointer(host))
+	username := cString(dsn.Username)
+	defer C.free(unsafe.Pointer(username))
+	password := cString(dsn.Password)
+	defer C.free(unsafe.Pointer(password))
 
 	if useOCISessionBegin {
 		// server handle
-		handle = nil
 		handle, _, err = conn.ociHandleAlloc(C.OCI_HTYPE_SERVER, 0)
 		if err != nil {
 			return nil, fmt.Errorf("allocate server handle error: %v", err)
 		}
 		conn.srv = (*C.OCIServer)(*handle)
+		handle = nil
 
 		if dsn.externalauthentication {
-			C.WrapOCIServerAttach(
-				conn.srv,
-				conn.errHandle,
-				nil,
-				0,
-				C.OCI_DEFAULT)
+			result = C.OCIServerAttach(
+				conn.srv,       // uninitialized server handle, which gets initialized by this call. Passing in an initialized server handle causes an error.
+				conn.errHandle, // error handle
+				nil,            // database server to use
+				0,              //  length of the database server
+				C.OCI_DEFAULT,  // mode of operation: OCI_DEFAULT or OCI_CPOOL
+			)
 		} else {
-			C.WrapOCIServerAttach(
-				conn.srv,
-				conn.errHandle,
-				(*C.text)(unsafe.Pointer(phost)),
-				C.ub4(len(dsn.Connect)),
-				C.OCI_DEFAULT)
+			result = C.OCIServerAttach(
+				conn.srv,       // uninitialized server handle, which gets initialized by this call. Passing in an initialized server handle causes an error.
+				conn.errHandle, // error handle
+				host,           // database server to use
+				C.sb4(len(dsn.Connect)), //  length of the database server
+				C.OCI_DEFAULT,           // mode of operation: OCI_DEFAULT or OCI_CPOOL
+			)
+		}
+		if result != C.OCI_SUCCESS {
+			return nil, conn.getError(result)
 		}
 
 		// service handle
-		handle = nil
 		handle, _, err = conn.ociHandleAlloc(C.OCI_HTYPE_SVCCTX, 0)
 		if err != nil {
 			return nil, fmt.Errorf("allocate service handle error: %v", err)
 		}
 		conn.svc = (*C.OCISvcCtx)(*handle)
+		handle = nil
 
 		// sets the server context attribute of the service context
 		err = conn.ociAttrSet(unsafe.Pointer(conn.svc), C.OCI_HTYPE_SVCCTX, unsafe.Pointer(conn.srv), 0, C.OCI_ATTR_SERVER)
@@ -298,41 +287,39 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 		}
 
 		// user session handle
-		handle = nil
 		handle, _, err = conn.ociHandleAlloc(C.OCI_HTYPE_SESSION, 0)
 		if err != nil {
 			return nil, fmt.Errorf("allocate user session handle error: %v", err)
 		}
 		conn.usrSession = (*C.OCISession)(*handle)
+		handle = nil
 
+		credentialType := C.ub4(C.OCI_CRED_EXT)
 		if !dsn.externalauthentication {
 			// specifies a username to use for authentication
-			err = conn.ociAttrSet(unsafe.Pointer(conn.usrSession), C.OCI_HTYPE_SESSION, unsafe.Pointer(puser), C.ub4(len(dsn.Username)), C.OCI_ATTR_USERNAME)
+			err = conn.ociAttrSet(unsafe.Pointer(conn.usrSession), C.OCI_HTYPE_SESSION, unsafe.Pointer(username), C.ub4(len(dsn.Username)), C.OCI_ATTR_USERNAME)
 			if err != nil {
 				return nil, err
 			}
 
 			// specifies a password to use for authentication
-			err = conn.ociAttrSet(unsafe.Pointer(conn.usrSession), C.OCI_HTYPE_SESSION, unsafe.Pointer(ppass), C.ub4(len(dsn.Password)), C.OCI_ATTR_PASSWORD)
+			err = conn.ociAttrSet(unsafe.Pointer(conn.usrSession), C.OCI_HTYPE_SESSION, unsafe.Pointer(password), C.ub4(len(dsn.Password)), C.OCI_ATTR_PASSWORD)
 			if err != nil {
 				return nil, err
 			}
 
-			// begin the session
-			C.WrapOCISessionBegin(
-				conn.svc,
-				conn.errHandle,
-				conn.usrSession,
-				C.OCI_CRED_RDBMS,
-				conn.operationMode)
-		} else {
-			// external authentication
-			C.WrapOCISessionBegin(
-				conn.svc,
-				conn.errHandle,
-				conn.usrSession,
-				C.OCI_CRED_EXT,
-				conn.operationMode)
+			credentialType = C.OCI_CRED_RDBMS
+		}
+
+		result = C.OCISessionBegin(
+			conn.svc,           // service context
+			conn.errHandle,     // error handle
+			conn.usrSession,    // user session context
+			credentialType,     // type of credentials to use for establishing the user session: OCI_CRED_RDBMS or OCI_CRED_EXT
+			conn.operationMode, // mode of operation. https://docs.oracle.com/cd/B28359_01/appdev.111/b28395/oci16rel001.htm#LNOCI87690
+		)
+		if result != C.OCI_SUCCESS {
+			return nil, conn.getError(result)
 		}
 
 		// sets the authentication context attribute of the service context
@@ -343,20 +330,23 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 
 	} else {
 
-		if rv := C.WrapOCILogon(
-			conn.env,
-			conn.errHandle,
-			(*C.OraText)(unsafe.Pointer(puser)),
-			C.ub4(len(dsn.Username)),
-			(*C.OraText)(unsafe.Pointer(ppass)),
-			C.ub4(len(dsn.Password)),
-			(*C.OraText)(unsafe.Pointer(phost)),
-			C.ub4(len(dsn.Connect)),
-		); rv.rv != C.OCI_SUCCESS && rv.rv != C.OCI_SUCCESS_WITH_INFO {
-			return nil, conn.getError(rv.rv)
-		} else {
-			conn.svc = (*C.OCISvcCtx)(rv.ptr)
+		var svcCtxP *C.OCISvcCtx
+		svcCtxPP := &svcCtxP
+		result = C.OCILogon(
+			conn.env,                 // environment handle
+			conn.errHandle,           // error handle
+			svcCtxPP,                 // service context pointer
+			username,                 // user name. Must be in the encoding specified by the charset parameter of a previous call to OCIEnvNlsCreate().
+			C.ub4(len(dsn.Username)), // length of user name, in number of bytes, regardless of the encoding
+			password,                 // user's password. Must be in the encoding specified by the charset parameter of a previous call to OCIEnvNlsCreate().
+			C.ub4(len(dsn.Password)), // length of password, in number of bytes, regardless of the encoding.
+			host, // name of the database to connect to. Must be in the encoding specified by the charset parameter of a previous call to OCIEnvNlsCreate().
+			C.ub4(len(dsn.Connect)), // length of dbname, in number of bytes, regardless of the encoding.
+		)
+		if result != C.OCI_SUCCESS {
+			return nil, conn.getError(result)
 		}
+		conn.svc = *svcCtxPP
 
 	}
 
@@ -369,19 +359,19 @@ func (oci8Driver *OCI8DriverStruct) Open(dsnString string) (driver.Conn, error) 
 	return &conn, nil
 }
 
-// GetLastInsertId retuns last inserted ID
+// GetLastInsertId retuns rowid from LastInsertId
 func GetLastInsertId(id int64) string {
 	return *(*string)(unsafe.Pointer(uintptr(id)))
 }
 
 // LastInsertId returns last inserted ID
-func (r *OCI8Result) LastInsertId() (int64, error) {
-	return r.id, r.errid
+func (result *OCI8Result) LastInsertId() (int64, error) {
+	return int64(uintptr(unsafe.Pointer(&result.rowid))), result.rowidErr
 }
 
 // RowsAffected returns rows affected
-func (r *OCI8Result) RowsAffected() (int64, error) {
-	return r.n, r.errn
+func (result *OCI8Result) RowsAffected() (int64, error) {
+	return result.rowsAffected, result.rowsAffectedErr
 }
 
 // converts "?" characters to  :1, :2, ... :n

@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.3.0 
+
+* Update vendoring for go-oci8
+
 ## 0.2.9 (December 1, 2018)
 
 * Adding API for Managing Automated Database Maintenance Tasks
