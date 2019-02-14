@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.3.1 (February 14, 2019 )
+
+* Switch to goracle package as driver for connect to Oracle
+
 ## 0.3.0 (December 25, 2018)
 
 * Update vendoring for go-oci8.
