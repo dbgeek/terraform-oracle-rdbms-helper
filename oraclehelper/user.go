@@ -2,9 +2,10 @@ package oraclehelper
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/mattrobenolt/size"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/mattrobenolt/size"
 )
 
 const (
