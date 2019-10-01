@@ -1,5 +1,13 @@
 # Changelog oraclehelper
 
+## 0.4.0 (October 14, 2019 )
+
+* feature: updating dependency
+* refactor: switching to terraform-plugin-sdk/helper/acctest instead of terraform/helper/acctest
+* refactor: cleanup trailing whitespace
+* test: fixing dependency that table should exists
+* feature: adding audit user
+
 ## 0.3.1 (February 14, 2019 )
 
 * Switch to goracle package as driver for connect to Oracle
