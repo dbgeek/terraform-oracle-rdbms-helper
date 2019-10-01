@@ -6,13 +6,13 @@ import (
 
 const (
 	queryTablePref = `
-SELECT 
-	DBMS_STATS.GET_PREFS (:1,:2,:3) AS pvalue 
+SELECT
+	DBMS_STATS.GET_PREFS (:1,:2,:3) AS pvalue
 FROM dual
 `
 	queryGlobalPref = `
-SELECT 
-	DBMS_STATS.GET_PREFS (:1) AS pvalue 
+SELECT
+	DBMS_STATS.GET_PREFS (:1) AS pvalue
 FROM dual
 `
 	setGlobalPref = `

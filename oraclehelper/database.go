@@ -8,7 +8,7 @@ import (
 const (
 	queryDatabase = `
 SELECT
-	name, 
+	name,
 	flashback_on,
 	force_logging
 FROM v$database

@@ -33,13 +33,14 @@ type (
 		AutoTaskService            *autoTaskService
 		DatabaseService            *databaseService
 		BlockChangeTrackingService *blockChangeTrackingService
+		AuditUserService           *auditUserService
 	}
 )
 
 const (
 	queryDbVersion = `
-SELECT 
-	version 
+SELECT
+	version
 FROM v$instance
 `
 )
@@ -90,6 +91,7 @@ func NewClient(cfg Cfg) *Client {
 	c.SchedulerWindowService = &schedulerWindowService{client: c}
 	c.AutoTaskService = &autoTaskService{client: c}
 	c.DatabaseService = &databaseService{client: c}
+	c.AuditUserService = &auditUserService{client: c}
 	c.DBVersion, _ = version.NewVersion(dBVersion)
 	log.Printf("[DEBUG] dbversion: %v", c.DBVersion)
 

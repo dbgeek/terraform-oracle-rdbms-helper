@@ -1,9 +1,10 @@
 package oraclehelper
 
 import (
-	"github.com/hashicorp/terraform/helper/acctest"
 	"log"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 var (
