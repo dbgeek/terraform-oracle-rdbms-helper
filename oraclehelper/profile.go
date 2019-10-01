@@ -7,8 +7,8 @@ import (
 
 const (
 	queryProfile = `
-SELECT 
-  * 
+SELECT
+  *
 FROM dba_profiles
 WHERE profile = UPPER(:1)
 `

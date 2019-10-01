@@ -38,7 +38,7 @@ FROM dba_tab_privs tp
 ORDER BY tp.table_name
 `
 	queryTableGrantsMissing = `
-SELECT 
+SELECT
 	table_name
 FROM (
 	SELECT

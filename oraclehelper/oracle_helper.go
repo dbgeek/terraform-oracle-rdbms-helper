@@ -33,13 +33,14 @@ type (
 		AutoTaskService            *autoTaskService
 		DatabaseService            *databaseService
 		BlockChangeTrackingService *blockChangeTrackingService
+		AuditUserService           *auditUserService
 	}
 )
 
 const (
 	queryDbVersion = `
-SELECT 
-	version 
+SELECT
+	version
 FROM v$instance
 `
 )

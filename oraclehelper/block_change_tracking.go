@@ -8,7 +8,7 @@ import (
 
 const (
 	queryBlockChangeTracking = `
-SELECT 
+SELECT
     bct.status,
     bct.filename
 FROM v$block_change_tracking bct
