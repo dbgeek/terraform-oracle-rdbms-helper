@@ -7,6 +7,8 @@ import (
 )
 
 func TestGrantServiceObjectGrants(t *testing.T) {
+	c.DBClient.Exec("drop table system.test")
+	c.DBClient.Exec("create table system.test(col1 number)")
 	objGrant := ResourceGrantObjectPrivilege{
 		Grantee:    "GRANTTST01",
 		Privilege:  []string{"SELECT"},
