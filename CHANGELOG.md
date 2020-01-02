@@ -1,5 +1,9 @@
 # Changelog oraclehelper
 
+## 0.4.1 (Januari 2, 2020)
+
+* Bug: Adding special character and numeric to the password. So create user will not fail if using `ORA12C_STIG_VERIFY_FUNCTION`. Closing issue #30.
+
 ## 0.4.0 (October 14, 2019 )
 
 * feature: updating dependency
