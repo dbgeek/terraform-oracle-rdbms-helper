@@ -10,7 +10,10 @@ func TestUserService(t *testing.T) {
 	quota["USERS"] = "unlimited"
 	quota["SYSTEM"] = "10m"
 	quota["SYSAUX"] = "10G"
-	c.UserService.CreateUser(ResourceUser{Username: "TEST01"})
+	err := c.UserService.CreateUser(ResourceUser{Username: "TEST01"})
+	if err != nil {
+		t.Fatalf("CreateUser failed with error: %v", err)
+	}
 	c.ProfileService.CreateProfile(ResourceProfile{Profile: "PP01"})
 	user, _ := c.UserService.ReadUser(ResourceUser{Username: "TEST01"})
 	if user.Profile != "DEFAULT" {

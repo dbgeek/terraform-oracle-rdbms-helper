@@ -101,7 +101,7 @@ func (u *userService) CreateUser(tf ResourceUser) error {
 	password := acctest.RandStringFromCharSet(20, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuwxyz")
 	// Adding some special character if you are using t ex ORA12C_STIG_VERIFY_FUNCTION
 	password += "!1"
-	sqlCommand := fmt.Sprintf("create user %s identified by %s", tf.Username, password)
+	sqlCommand := fmt.Sprintf(`create user %s identified by "%s"`, tf.Username, password)
 
 	if tf.DefaultTablespace != "" {
 		sqlCommand += fmt.Sprintf(" default tablespace %s", tf.DefaultTablespace)
