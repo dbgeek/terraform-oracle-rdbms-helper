@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/hashicorp/go-version"
-	//goracle package as driver for Oracle
-	_ "gopkg.in/goracle.v2"
+	//godror package as driver for Oracle
+	"github.com/godror/godror"
 )
 
 type (
@@ -23,6 +23,8 @@ type (
 	Client struct {
 		DBClient                   *sql.DB
 		DBVersion                  *version.Version
+		DBPluggable                bool
+		ConName                    string
 		ParameterService           *parameterService
 		ProfileService             *profileService
 		UserService                *userService
@@ -43,41 +45,55 @@ SELECT
 	version
 FROM v$instance
 `
+	queryConName = `
+SELECT
+	SYS_CONTEXT('USERENV', 'CON_NAME') AS CON_NAME
+FROM   dual
+`
+	queryConID = `
+SELECT
+	SYS_CONTEXT('USERENV', 'CON_ID') AS CON_ID
+FROM   dual
+`
 )
 
 // NewClient fkfkf
-func NewClient(cfg Cfg) *Client {
+func NewClient(cfg Cfg) (*Client, error) {
 	var err error
 	var db *sql.DB
 	var dBVersion string
+	var conName string
+	var conID uint
+	var connPar godror.ConnectionParams
+	connPar.Username, connPar.Password = cfg.Username, godror.NewPassword(cfg.Password)
+
 	if cfg.DbHost == "" && cfg.DbPort == "" {
-		db, err = sql.Open("goracle", fmt.Sprintf("%s/%s@%s", cfg.Username, cfg.Password, cfg.DbService))
-		if err != nil {
-			log.Fatal(err)
-
-		}
+		connPar.ConnectString = cfg.DbService
+		db = sql.OpenDB(godror.NewConnector(connPar))
 	} else {
-		//user/name@host:port/sid
 		log.Printf("[DEBUG] dbhost connection string, username: %s, password: %s, dbhost: %s, dbport: %s, dbservice: %s \n", cfg.Username, cfg.Password, cfg.DbHost, cfg.DbPort, cfg.DbService)
-		db, err = sql.Open("goracle", fmt.Sprintf("%s/%s@%s:%s/%s", cfg.Username, cfg.Password, cfg.DbHost, cfg.DbPort, cfg.DbService))
-
-		log.Printf("[DEBUG] connection str %s", fmt.Sprintf("%s/%s@%s:%s/%s", cfg.Username, cfg.Password, cfg.DbHost, cfg.DbPort, cfg.DbService))
-
-		if err != nil {
-			log.Fatal(err)
-
-		}
-		db.Ping()
-		if err != nil {
-			log.Printf("[DEBUG] ping failed")
-			log.Fatal(err)
-
-		}
+		connPar.ConnectString = fmt.Sprintf("%s:%s/%s", cfg.DbHost, cfg.DbPort, cfg.DbService)
+		db = sql.OpenDB(godror.NewConnector(connPar))
 	}
-
+	err = db.Ping()
+	if err != nil {
+		log.Printf("[DEBUG] ping failed")
+		return nil, err
+	}
 	err = db.QueryRow(queryDbVersion).Scan(&dBVersion)
 	if err != nil {
 		log.Fatalf("Query db version failed and return error: %v\n", err)
+		return nil, err
+	}
+	err = db.QueryRow(queryConName).Scan(&conName)
+	if err != nil {
+		log.Fatalf("Query con name failed and return error: %v\n", err)
+		return nil, err
+	}
+	err = db.QueryRow(queryConID).Scan(&conID)
+	if err != nil {
+		log.Fatalf("Query con id failed and return error: %v\n", err)
+		return nil, err
 	}
 
 	c := &Client{DBClient: db}
@@ -93,7 +109,13 @@ func NewClient(cfg Cfg) *Client {
 	c.DatabaseService = &databaseService{client: c}
 	c.AuditUserService = &auditUserService{client: c}
 	c.DBVersion, _ = version.NewVersion(dBVersion)
+	c.ConName = conName
+	if conID >= 1 {
+		c.DBPluggable = true
+	} else {
+		c.DBPluggable = false
+	}
 	log.Printf("[DEBUG] dbversion: %v", c.DBVersion)
 
-	return c
+	return c, nil
 }

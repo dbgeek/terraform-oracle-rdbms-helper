@@ -14,10 +14,14 @@ var (
 )
 
 func init() {
-	if err := envconfig.Process("tf_ora_helper", &cfg); err != nil {
+	var err error
+	if err = envconfig.Process("tf_ora_helper", &cfg); err != nil {
 		log.Fatalf("failed to parse config: %v\n", err)
 	}
-	c = NewClient(cfg)
+	c, err = NewClient(cfg)
+	if err != nil {
+		log.Fatalf("failed to parse config: %v\n", err)
+	}
 }
 func TestDBConnection(t *testing.T) {
 	var got string

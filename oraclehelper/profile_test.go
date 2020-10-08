@@ -16,6 +16,10 @@ func TestProfileService(t *testing.T) {
 }
 
 func TestProfileServiceCreateUpdateDropProfile(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	profile := ResourceProfile{
 		Profile:      "TEST01",
 		ResourceName: "IDLE_TIME",
@@ -40,6 +44,10 @@ func TestProfileServiceCreateUpdateDropProfile(t *testing.T) {
 }
 
 func TestProfileServiceReadProfileProfileNotExist(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	profile := ResourceProfile{
 		Profile: "PROFILE_NOT_EXIST",
 	}

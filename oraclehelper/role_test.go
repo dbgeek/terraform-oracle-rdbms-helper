@@ -6,6 +6,10 @@ import (
 )
 
 func TestRoleService(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	dbRole := ResourceRole{
 		Role: "TESTROLE",
 	}

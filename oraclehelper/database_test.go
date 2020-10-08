@@ -18,7 +18,11 @@ func TestDatabaseRead(t *testing.T) {
 }
 
 func TestDatabaseModify(t *testing.T) {
-
+	var logMode string
+	c.DBClient.QueryRow("SELECT log_mode FROM v$database").Scan(&logMode)
+	if logMode == "NOARCHIVELOG" {
+		return
+	}
 	db, err := c.DatabaseService.ReadDatabase()
 	if err != nil {
 		log.Fatalf("failed to read database, errormsg: %v\n", err)
