@@ -8,6 +8,10 @@ import (
 )
 
 func TestAuditRead(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	audit := ResourceAuditUser{
 		UserName: "BB",
 	}
@@ -21,6 +25,10 @@ func TestAuditRead(t *testing.T) {
 }
 
 func TestAuditSetAudit(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username := acctest.RandStringFromCharSet(10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	t.Logf("TestAuditSetAudit using username: %s for this test run", username)
 	quota := make(map[string]string)
@@ -97,6 +105,10 @@ func TestAuditSetAudit(t *testing.T) {
 }
 
 func TestAuditRemoveAudit(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	t.Logf("TestAuditSetAudit")
 	quota := make(map[string]string)
 	quota["USERS"] = "unlimited"

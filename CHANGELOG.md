@@ -1,5 +1,13 @@
 # Changelog oraclehelper
 
+## 0.5.0 (October, 8, 2020)
+
+* refactor: newClient return err now if db.Ping not succeed
+* refactor: newClient now using godror as driver for Oracle
+* dependency: Bumping hashicorp/go-version & terraform-plugin-sdk
+* test: Make aware of multitenant is used or not
+* bug: connect to db crash if using special character like `@`
+
 ## 0.4.2 (January 3, 2020)
 
 * Bug: Need to quote the password if it contain special characters. Issue #30

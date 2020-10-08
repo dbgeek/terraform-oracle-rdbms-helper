@@ -6,6 +6,10 @@ import (
 )
 
 func TestUserService(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	quota := make(map[string]string)
 	quota["USERS"] = "unlimited"
 	quota["SYSTEM"] = "10m"

@@ -7,6 +7,10 @@ import (
 )
 
 func TestGrantServiceObjectGrants(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	c.DBClient.Exec("drop table system.test")
 	c.DBClient.Exec("create table system.test(col1 number)")
 	objGrant := ResourceGrantObjectPrivilege{
@@ -65,6 +69,10 @@ func TestGrantServiceObjectGrants(t *testing.T) {
 }
 
 func TestGrantServiceSysPrivsGrants(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username := "GRANTSYSPRIVTEST"
 	sysPrivs := ResourceGrantSystemPrivilege{
 		Grantee:   username,
@@ -89,6 +97,10 @@ func TestGrantServiceSysPrivsGrants(t *testing.T) {
 }
 
 func TestGrantServiceRolePrivs(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username := "GRANTROLEPRIVTEST"
 	resourceUsername := ResourceUser{Username: username}
 	dbRole := ResourceRole{
@@ -119,6 +131,10 @@ func TestGrantServiceRolePrivs(t *testing.T) {
 }
 
 func TestGrantServiceWholeSchemaToUser(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username := "TSTSCHEMA"
 	want := "d49cb717d004498a4ea71d1742ff5755a0e295360515e96835ba43547a0059c9"
 	c.DBClient.Exec(fmt.Sprintf("DROP USER %s CASCADE", username))
@@ -146,6 +162,10 @@ func TestGrantServiceWholeSchemaToUser(t *testing.T) {
 
 }
 func TestGrantServiceGetHashSchemaPrivsToUser(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username1 := "TSTSCHEMA1"
 	username2 := "TSTSCHEMA2"
 	want := "cec6418210ba8b444c741c06a91390888287d5dae6bdb9eeff4ac8e081d13690"
@@ -184,6 +204,10 @@ func TestGrantServiceGetHashSchemaPrivsToUser(t *testing.T) {
 }
 
 func TestGrantServiceCheckGrantSchemaDiffLogic(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username1 := "TSTSCHEMA1"
 	username2 := "TSTSCHEMA2"
 
@@ -231,6 +255,10 @@ func TestGrantServiceCheckGrantSchemaDiffLogic(t *testing.T) {
 }
 
 func TestGrantServiceCRevokeSchemaFromUser(t *testing.T) {
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	username1 := "TSTSCHEMA1"
 	username2 := "TSTSCHEMA2"
 

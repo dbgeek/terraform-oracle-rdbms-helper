@@ -7,6 +7,9 @@ import (
 )
 
 func TestBlackChangeTracking(t *testing.T) {
+	if c.DBPluggable {
+		return
+	}
 	var err error
 	blockChangTracking, err := c.BlockChangeTrackingService.ReadBlockChangeTracking()
 	if err != nil {

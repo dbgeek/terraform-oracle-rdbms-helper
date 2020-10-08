@@ -5,7 +5,10 @@ import (
 )
 
 func TestSchedulerWindowService(t *testing.T) {
-
+	// This test can not be run against an container db
+	if c.ConName == "CDB$ROOT" {
+		return
+	}
 	tstWindow := ResourceSchedulerWindow{
 		WindowName:     "TEST01",
 		ResourcePlan:   "INTERNAL_PLAN",
