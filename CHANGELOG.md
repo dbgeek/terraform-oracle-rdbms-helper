@@ -1,5 +1,11 @@
 # Changelog oraclehelper
 
+## 0.5.1 (October, 23, 2002)
+
+* feature: Adding sysdba support
+* dependency: bumping godror
+* refactor: breaking up long row
+
 ## 0.5.0 (October, 8, 2020)
 
 * refactor: newClient return err now if `db.Ping` not succeed

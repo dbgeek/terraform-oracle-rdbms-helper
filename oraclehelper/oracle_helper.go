@@ -18,6 +18,7 @@ type (
 		DbHost    string
 		DbPort    string
 		DbService string
+		SysDBA    bool
 	}
 	// Client fkfkkf
 	Client struct {
@@ -66,12 +67,21 @@ func NewClient(cfg Cfg) (*Client, error) {
 	var conID uint
 	var connPar godror.ConnectionParams
 	connPar.Username, connPar.Password = cfg.Username, godror.NewPassword(cfg.Password)
-
+	if cfg.SysDBA {
+		connPar.IsSysDBA = true
+	}
 	if cfg.DbHost == "" && cfg.DbPort == "" {
 		connPar.ConnectString = cfg.DbService
 		db = sql.OpenDB(godror.NewConnector(connPar))
 	} else {
-		log.Printf("[DEBUG] dbhost connection string, username: %s, password: %s, dbhost: %s, dbport: %s, dbservice: %s \n", cfg.Username, cfg.Password, cfg.DbHost, cfg.DbPort, cfg.DbService)
+		log.Printf("[DEBUG] dbhost connection string, username: %s, password: %s, dbhost: %s, dbport: %s, dbservice: %s, sysDba: %v \n",
+			cfg.Username,
+			cfg.Password,
+			cfg.DbHost,
+			cfg.DbPort,
+			cfg.DbService,
+			cfg.SysDBA,
+		)
 		connPar.ConnectString = fmt.Sprintf("%s:%s/%s", cfg.DbHost, cfg.DbPort, cfg.DbService)
 		db = sql.OpenDB(godror.NewConnector(connPar))
 	}
