@@ -18,6 +18,7 @@ type (
 		DbHost    string
 		DbPort    string
 		DbService string
+		SysDBA    bool
 	}
 	// Client fkfkkf
 	Client struct {
@@ -66,7 +67,9 @@ func NewClient(cfg Cfg) (*Client, error) {
 	var conID uint
 	var connPar godror.ConnectionParams
 	connPar.Username, connPar.Password = cfg.Username, godror.NewPassword(cfg.Password)
-
+	if cfg.SysDBA {
+		connPar.IsSysDBA = true
+	}
 	if cfg.DbHost == "" && cfg.DbPort == "" {
 		connPar.ConnectString = cfg.DbService
 		db = sql.OpenDB(godror.NewConnector(connPar))
